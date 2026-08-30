@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advinhe o Número — projeto acadêmico em Python</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{% load static %}   
+<link rel="stylesheet" href="{% static 'index.css' %}">
+</head>
+<body>
+
+  <header>
+    <span class="logo">adivinha<span>.py</span></span>
+    <ul id="menu">
+      <li><a href="#inicio">Início</a></li>
+      <li><a href="#game">Game</a></li>
+      <li><a href="#contato">Contato</a></li>
+    </ul>
+  </header>
+
+  <section id="inicio">
+    <p class="eyebrow">projeto acadêmico // python + django</p>
+    <h1>Um jogo de advinhação simples, pensado para ser lido tanto quanto jogado.</h1>
+    <p class="sub">
+      Esse projeto nasceu de um trabalho de apresentação na faculdade. O desafio era
+      escolher algo pequeno o bastante para explicar em poucos minutos, mas construído
+      com uma estrutura organizada o suficiente para servir de exemplo. O jogo em si é
+      direto: o computador escolhe um número entre 1 e 10 e o jogador tenta adivinhar.
+      A maior dificuldade que presenciei neste projeto foi a conversão do framework Flask
+      para o Django, pois já sabia utilizar o Flask, porém o Django ainda é novo para mim.
+    </p>
+    <div class="acoes">
+      <a href="#game" class="botao primario">Jogar agora</a>
+      <a href="#contato" class="botao secundario">Contato</a>
+    </div>
+
+    <div class="estrutura">
+      <div class="estrutura-item">
+        <span class="arquivo mono">views.py</span>
+        <span class="descricao">laço do jogo e validação do palpite, guardados na sessão</span>
+      </div>
+      <div class="estrutura-item">
+        <span class="arquivo mono">models.py</span>
+        <span class="descricao">tabela de jogadores, via ORM do Django</span>
+      </div>
+      <div class="estrutura-item">
+        <span class="arquivo mono">urls.py</span>
+        <span class="descricao">rotas do jogo e de reinício de partida</span>
+      </div>
+      <div class="estrutura-item">
+        <span class="arquivo mono">templates/game/index.html</span>
+        <span class="descricao">esta própria página</span>
+      </div>
+    </div>
+
+    <p class="nota">
+      A versão original rodava inteira no terminal, com <span class="mono">input()</span>
+      e cores via ANSI, e salvava a pontuação num banco MySQL à parte. Esta versão em
+      Django usa o mesmo raciocínio — só que cada palpite chega como uma requisição, e
+      o estado da partida fica na sessão em vez de numa variável local.
+    </p>
+  </section>
+
+  <section id="game">
+    <p class="eyebrow">game // interativo</p>
+    <h2>Advinhe o Número</h2>
+    <div class="texto">
+      O computador escolhe, em segredo, um número entre 1 e 10. A cada palpite errado,
+      o jogo avisa se o número secreto é maior ou menor que o valor digitado — e conta
+      quantas tentativas foram necessárias até o acerto.
+    </div>
+    <div class="texto">
+      Cada envio abaixo recarrega a página: o palpite vai para o servidor, o Django
+      decide a resposta e guarda o resultado na sessão. Não há JavaScript decidindo o
+      jogo — só um formulário normal.
+    </div>
+
+    <div class="lista-criterios">
+      <div class="item-criterio">
+        <span class="num mono">01</span>
+        <h3>Intervalo fixo</h3>
+        <p>O número secreto está sempre entre 1 e 10.</p>
+      </div>
+      <div class="item-criterio">
+        <span class="num mono">02</span>
+        <h3>Dica a cada rodada</h3>
+        <p>O servidor informa se o palpite foi maior ou menor que o número certo.</p>
+      </div>
+      <div class="item-criterio">
+        <span class="num mono">03</span>
+        <h3>Contagem de tentativas</h3>
+        <p>Cada partida guarda, na sessão, quantos palpites foram usados até o acerto.</p>
+      </div>
+      <div class="item-criterio">
+        <span class="num mono">04</span>
+        <h3>Pontuação salva</h3>
+        <p>Ao vencer, o nome e o número de tentativas viram um registro no banco.</p>
+      </div>
+    </div>
+
+    <div id="jogoWrapper">
+      <div class="jogo-terminal">
+        <div class="terminal-barra">
+          <span class="bolinha"></span><span class="bolinha"></span><span class="bolinha"></span>
+          <span class="terminal-titulo mono">views.jogo_view</span>
+        </div>
+
+        <div class="jogo-corpo">
+          {% for linha in historico %}
+            <div class="jogo-linha {{ linha.classe }}">{{ linha.texto }}</div>
+          {% empty %}
+            <div class="jogo-linha sistema">Antes de começar, digite seu nome:</div>
+          {% endfor %}
+        </div>
+
+        <form method="post" action="{% url 'jogo' %}" class="jogo-form">
+          {% csrf_token %}
+          <span class="jogo-prompt">&gt;</span>
+          <input type="text" name="valor" class="jogo-input" autocomplete="off" placeholder="Digite aqui" autofocus>
+          <button type="submit" class="botao primario pequeno">Enviar</button>
+        </form>
+
+        <div class="jogo-rodape">
+          <a href="#ranking">Ver ranking</a>
+          <a href="{% url 'reiniciar' %}">Trocar de jogador / Reiniciar</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="ranking" id="ranking">
+      <h3>Ranking — menos tentativas primeiro</h3>
+      <table class="ranking-tabela">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Jogador</th>
+            <th>Tentativas</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for jogador in ranking %}
+            <tr>
+              <td class="mono">{{ forloop.counter }}</td>
+              <td>{{ jogador.nome }}</td>
+              <td class="mono">{{ jogador.pontuacao }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="3" class="ranking-vazio">Ninguém venceu uma partida ainda.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="contato">
+    <p class="eyebrow">contato</p>
+    <h2>Dúvida, bug ou sugestão sobre o jogo</h2>
+    <div class="texto">
+      Respondemos por e-mail dentro de dois dias úteis. Para bugs, um exemplo mínimo
+      que reproduza o problema ajuda muito.
+    </div>
+
+    <div class="contato-grade">
+      <div class="contato-bloco">
+        <span class="rotulo">E-mail</span>
+        <a class="valor" href="mailto:lenildo.rosa.secundario@gmail.com">lenildo.rosa.secundario@gmail.com</a>
+      </div>
+      <div class="contato-bloco">
+        <span class="rotulo">Código-fonte</span>
+        <a class="valor" href="https://github.com/LJBLUES11">GitHub/LJBLUES11</a>
+      </div>
+      <div class="contato-bloco">
+        <span class="rotulo">Documentação</span>
+        <a class="valor" href="#">docs.pychoice.dev</a>
+      </div>
+      <div class="contato-bloco">
+        <span class="rotulo">Tempo de resposta</span>
+        <span class="valor">Até 2 dias úteis</span>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2026 Advinhe o Número. Projeto acadêmico em Python.</p>
+    <a href="#inicio" class="voltar">Voltar ao início ↑</a>
+  </footer>
+
+</body>
+</html>
