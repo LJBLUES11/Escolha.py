@@ -184,3 +184,5 @@ http://127.0.0.1:8000/
 - O projeto está configurado com `DEBUG = True`, ou seja, é voltado para **ambiente de desenvolvimento/estudo**, não para produção.
 - O ranking é armazenado em cache por 5 minutos para reduzir consultas ao banco de dados a cada carregamento da página.
 - Este projeto tem fins **acadêmicos/demonstrativos**.
+- 
+- Obrigado por ter visitado meu Repositório, ass:LJBLUES
