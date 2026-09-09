@@ -11,19 +11,12 @@ RANKING_CACHE_TIMEOUT = 60 * 5  # 5 minutos
 
 
 def _adicionar_linha(request, texto, classe='sistema'):
-    """Guarda uma linha no histórico exibido dentro do terminal do jogo."""
     historico = request.session.get('historico', [])
     historico.append({'texto': texto, 'classe': classe})
     request.session['historico'] = historico
 
 
 def jogo_view(request):
-    """
-    Substitui o main.py original. Cada palpite chega como um POST separado
-    (não existe um "while" de verdade em uma página web), então o estado da
-    partida - nome do jogador, número secreto e tentativas - fica guardado
-    na sessão entre uma requisição e outra.
-    """
     if request.method == 'POST':
         valor = request.POST.get('valor', '').strip()
         estado = request.session.get('estado', 'nome')
